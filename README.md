@@ -15,6 +15,7 @@ ferramentas pagas como o SmoothScroll.
 - 🚫 Lista de aplicativos excluídos (jogos, acesso remoto, etc.)
 - ⌨️ Shift + rodinha rola na horizontal; zoom com Ctrl + rodinha continua funcionando
 - 🪶 App minúsculo na barra de menu, sem ícone no Dock, inicia com o Mac
+- 🔔 Avisa no menu quando uma versão nova é publicada
 
 ## Instalação (usuários)
 
@@ -32,6 +33,17 @@ menu dá acesso às configurações.
 
 > Alternativa ao passo 3, no Terminal:
 > `xattr -cr /Applications/SuaveScroll.app`
+
+## Atualizações
+
+O SuaveScroll verifica a cada 6 horas se existe versão nova no GitHub. Quando
+houver, aparece **"⬆️ Atualizar para a versão X"** no menu do ícone do mouse —
+clique, baixe o novo DMG e arraste o app para Applications de novo,
+substituindo o antigo. Suas configurações são preservadas.
+
+> Como a assinatura do app muda entre versões, o macOS pode exigir repetir o
+> passo do "Abrir Mesmo Assim" e reativar o interruptor de Acessibilidade
+> após atualizar. Atualização com um clique (Sparkle) está no roadmap.
 
 ## Requisitos
 
@@ -75,6 +87,8 @@ make dmg   # gera o instalador dist/SuaveScroll.dmg
 
 ## Roadmap
 
+- [ ] Atualização automática com um clique (Sparkle) e assinatura estável
+- [ ] Distribuição via Homebrew (`brew install --cask`)
 - [ ] Fases de momentum/gesto nos eventos sintetizados (efeito elástico em alguns apps)
 - [ ] Configurações por dispositivo
 - [ ] Suavização da rolagem por teclado (setas / espaço)

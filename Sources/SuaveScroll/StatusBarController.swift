@@ -10,6 +10,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     private var enabledItem: NSMenuItem!
     private var accessibilityItem: NSMenuItem!
     private var loginItem: NSMenuItem!
+    private var updateItem: NSMenuItem!
 
     init(engine: ScrollEngine) {
         self.engine = engine
@@ -38,6 +39,11 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         )
         accessibilityItem.target = self
         menu.addItem(accessibilityItem)
+
+        updateItem = NSMenuItem(title: "Baixar Atualização…", action: #selector(openDownloadPage), keyEquivalent: "")
+        updateItem.target = self
+        updateItem.isHidden = true
+        menu.addItem(updateItem)
 
         enabledItem = NSMenuItem(title: "Rolagem Suave", action: #selector(toggleEnabled), keyEquivalent: "e")
         enabledItem.target = self
@@ -71,6 +77,13 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     func menuNeedsUpdate(_ menu: NSMenu) {
         let granted = AccessibilityPermission.isGranted
         accessibilityItem.isHidden = granted
+
+        if UpdateChecker.shared.updateAvailable, let latest = UpdateChecker.shared.latestVersion {
+            updateItem.title = "⬆️ Atualizar para a versão \(latest)…"
+            updateItem.isHidden = false
+        } else {
+            updateItem.isHidden = true
+        }
         enabledItem.isEnabled = granted
         enabledItem.state = (granted && Settings.shared.isEnabled) ? .on : .off
 
@@ -109,6 +122,10 @@ final class StatusBarController: NSObject, NSMenuDelegate {
 
     @objc private func openGitHub() {
         NSWorkspace.shared.open(URL(string: "https://github.com/xenerrer/SuaveScroll")!)
+    }
+
+    @objc private func openDownloadPage() {
+        NSWorkspace.shared.open(UpdateChecker.downloadPageURL)
     }
 
     @objc private func openSettings() {

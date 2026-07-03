@@ -8,6 +8,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         statusBar = StatusBarController(engine: engine)
+        UpdateChecker.shared.startPeriodicChecks()
         DiagLog.write("launched — accessibility granted: \(AccessibilityPermission.isGranted)")
 
         if AccessibilityPermission.isGranted {
