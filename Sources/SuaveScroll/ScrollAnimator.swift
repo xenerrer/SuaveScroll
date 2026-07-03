@@ -19,6 +19,11 @@ final class ScrollAnimator {
     private var pendingX: Double = 0
     private var pendingY: Double = 0
     private var currentFlags = CGEventFlags(rawValue: 0)
+    private var framesSinceInput = 0
+    /// Hard ceiling on glide length after the last wheel input (~5 s at 120 Hz).
+    /// The math below always terminates, but a runaway animator disturbs the
+    /// whole system — cheap insurance is warranted.
+    private let maxFramesSinceInput = 600
     private let eventSource: CGEventSource?
 
     init() {
@@ -32,10 +37,14 @@ final class ScrollAnimator {
 
     /// Adds a scroll impulse (in pixels). Called from the event tap thread.
     func add(dx: Double, dy: Double, flags: CGEventFlags) {
+        // A NaN/infinite delta from a misbehaving driver would poison the
+        // accumulator (and Int32(nan.rounded()) traps).
+        guard dx.isFinite, dy.isFinite else { return }
         queue.async { [self] in
             pendingX = clamp(pendingX + dx)
             pendingY = clamp(pendingY + dy)
             currentFlags = flags
+            framesSinceInput = 0
             startTimerIfNeeded()
         }
     }
@@ -68,9 +77,17 @@ final class ScrollAnimator {
     }
 
     private func tick() {
-        if abs(pendingX) < 0.5 { pendingX = 0 }
-        if abs(pendingY) < 0.5 { pendingY = 0 }
-        if pendingX == 0 && pendingY == 0 {
+        // Sub-pixel remainders are invisible — drop them. The threshold must
+        // be a full pixel: with 0.5 a remainder of exactly ±0.5 survives,
+        // rounds to a 0-px emission, gets bumped to ±1 by the forced-progress
+        // rule below and flips to ∓0.5 — oscillating at 120 Hz forever
+        // (visible as the whole screen "trembling").
+        if abs(pendingX) < 1 { pendingX = 0 }
+        if abs(pendingY) < 1 { pendingY = 0 }
+        framesSinceInput += 1
+        if pendingX == 0 && pendingY == 0 || framesSinceInput > maxFramesSinceInput {
+            pendingX = 0
+            pendingY = 0
             stopTimer()
             return
         }
