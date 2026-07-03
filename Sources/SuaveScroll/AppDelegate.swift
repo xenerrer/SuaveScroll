@@ -1,5 +1,6 @@
 import AppKit
 import ApplicationServices
+import ServiceManagement
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusBar: StatusBarController?
@@ -10,6 +11,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusBar = StatusBarController(engine: engine)
         UpdateChecker.shared.startPeriodicChecks()
         DiagLog.write("launched — accessibility granted: \(AccessibilityPermission.isGranted)")
+        enableLaunchAtLoginOnFirstRun()
+        observeWakeFromSleep()
 
         if AccessibilityPermission.isGranted {
             engine.start()
@@ -28,6 +31,37 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillTerminate(_ notification: Notification) {
         engine.stop()
+    }
+
+    /// Registers the app as a login item on first run so smoothing survives a
+    /// reboot without any setup. The "Iniciar com o Mac" menu item can undo it.
+    private func enableLaunchAtLoginOnFirstRun() {
+        let key = "didSetupLaunchAtLogin"
+        guard Bundle.main.bundleIdentifier != nil,
+              !UserDefaults.standard.bool(forKey: key) else { return }
+        do {
+            try SMAppService.mainApp.register()
+            // Only remember success — a failed first attempt (e.g. app still
+            // quarantined in ~/Downloads) should retry on the next launch.
+            UserDefaults.standard.set(true, forKey: key)
+            DiagLog.write("iniciar com o Mac ativado automaticamente (primeira execução)")
+        } catch {
+            DiagLog.write("falha ao ativar iniciar com o Mac: \(error)")
+        }
+    }
+
+    /// macOS can silently disable event taps around sleep/wake (timeout,
+    /// secure input). Re-check the tap every time the machine wakes up.
+    private func observeWakeFromSleep() {
+        NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.didWakeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            guard let self, AccessibilityPermission.isGranted else { return }
+            DiagLog.write("acordou do repouso — verificando event tap")
+            self.engine.ensureRunning()
+        }
     }
 }
 

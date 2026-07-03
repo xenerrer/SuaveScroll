@@ -14,7 +14,9 @@ ferramentas pagas como o SmoothScroll.
 - 🔄 Opção de inverter a direção da rolagem
 - 🚫 Lista de aplicativos excluídos (jogos, acesso remoto, etc.)
 - ⌨️ Shift + rodinha rola na horizontal; zoom com Ctrl + rodinha continua funcionando
-- 🪶 App minúsculo na barra de menu, sem ícone no Dock, inicia com o Mac
+- 🪶 App minúsculo na barra de menu, sem ícone no Dock
+- 🔁 Inicia com o Mac automaticamente e sobrevive ao repouso (religa o
+  interceptador se o sistema o desativar ao acordar)
 - 🔔 Avisa no menu quando uma versão nova é publicada
 
 ## Instalação (usuários)

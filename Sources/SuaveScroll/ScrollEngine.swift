@@ -82,6 +82,19 @@ final class ScrollEngine {
         animator.cancel()
     }
 
+    /// Revives the tap if the system disabled it (e.g. across sleep/wake).
+    /// Safe to call repeatedly; must run on the main thread.
+    func ensureRunning() {
+        if let tap = eventTap {
+            if !CGEvent.tapIsEnabled(tap: tap) {
+                CGEvent.tapEnable(tap: tap, enable: true)
+                DiagLog.write("event tap religado")
+            }
+        } else {
+            start()
+        }
+    }
+
     private func handle(type: CGEventType, event: CGEvent) -> Unmanaged<CGEvent>? {
         // The system disables taps that are slow or when secure input kicks in.
         if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
